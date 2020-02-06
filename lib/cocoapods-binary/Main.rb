@@ -24,6 +24,19 @@ module Pod
                 DSL.dont_remove_source_code = true
             end
 
+            # Enable shared cache of prebuild frameworks
+            # Frameworks are stored inside cocoapods cache folder
+            #
+            # Location: ~/Library/Caches/CocoaPods/Prebuilt/
+            # Structure: <xcode-version>/<framework-name>/<framework-version>/<options hash>/
+            # Options hash depends on:
+            # - bitcode(enable_bitcode_for_prebuilt_frameworks!);
+            # - custom options(set_custom_xcodebuild_options_for_prebuilt_frameworks);
+            # - platform name(ios, osx);
+            def use_shared_cache!
+                DSL.shared_cache_enabled = true
+            end
+
             # Add custom xcodebuild option to the prebuilding action
             #
             # You may use this for your special demands. For example: the default archs in dSYMs 
@@ -64,6 +77,9 @@ module Pod
 
             class_attr_accessor :dont_remove_source_code
             dont_remove_source_code = false
+
+            class_attr_accessor :shared_cache_enabled
+            shared_cache_enabled = false
 
             class_attr_accessor :custom_build_options
             class_attr_accessor :custom_build_options_simulator

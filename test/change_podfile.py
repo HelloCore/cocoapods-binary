@@ -53,7 +53,7 @@ def addSwiftPod():
 """
 keep_source_code_for_prebuilt_frameworks!
 
-pod "RxCocoa", :binary => true
+pod "RxCocoa", '~> 4.0', :binary => true
 pod "Literal", :binary => true
 """), 
 """
@@ -70,7 +70,7 @@ def revertToSourceCode():
 """
 keep_source_code_for_prebuilt_frameworks!
 
-pod "RxCocoa", :binary => true
+pod "RxCocoa", '~> 4.0', :binary => true
 pod "Literal"
 """), 
 """
@@ -91,7 +91,7 @@ enable_bitcode_for_prebuilt_frameworks!
 
 pod "Masonry", :binary => true
 pod "Literal", :binary => true
-pod "lottie-ios", :binary => true
+pod "lottie-ios", "~> 2.5", :binary => true
 """), 
 """
 import Masonry
@@ -99,7 +99,7 @@ import Literal
 import Lottie
 class A {
     let a: CGRect = [1,2,3,4]
-    let a2 = AnimationView.self
+    let a2 = LOTAnimationView.self
     let d = UIView().mas_top
 }
 """) 
@@ -110,7 +110,7 @@ def addSubPod():
 """
 pod "Masonry", :binary => true
 pod "Literal", :binary => true
-pod "lottie-ios", :binary => true
+pod "lottie-ios", "~> 2.5", :binary => true
 pod "AFNetworking/Reachability", :binary => true
 """) , 
 """
@@ -120,7 +120,7 @@ import Lottie
 import AFNetworking
 class A {
     let a: CGRect = [1,2,3,4]
-    let a2 = AnimationView.self
+    let a2 = LOTAnimationView.self
     let b = AFNetworkReachabilityManager()
     let d = UIView().mas_top
 }
@@ -232,6 +232,39 @@ class A {
 }
 """
 ) 
+
+def oldPodVersion():
+    return (wrapper(
+"""
+pod "ReactiveSwift", "= 3.0.0", :binary => true
+""") ,
+"""
+import ReactiveSwift
+class A {
+    // Works on 3.x but not 4.x
+    let a = A.b(SignalProducer<Int, NSError>.empty)
+    static func b<U: BindingSource>(_ b: U) -> Bool {
+        return true
+    }
+}
+"""
+)
+
+def upgradePodVersion():
+    return (wrapper(
+"""
+pod "ReactiveSwift", "= 4.0.0", :binary => true
+""") ,
+"""
+import ReactiveSwift
+class A {
+    func b() {
+        // Works on 4.x but not 3.x
+        Lifetime.make().token.dispose()
+    }
+}
+"""
+)
 
 
 if __name__ == "__main__":

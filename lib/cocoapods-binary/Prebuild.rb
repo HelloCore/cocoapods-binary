@@ -1,6 +1,7 @@
 require_relative 'rome/build_framework'
 require_relative 'helper/passer'
 require_relative 'helper/target_checker'
+require_relative 'helper/shared_cache'
 
 
 # patch prebuild ability
@@ -70,7 +71,11 @@ module Pod
             # build options
             sandbox_path = sandbox.root
             existed_framework_folder = sandbox.generate_framework_path
-            bitcode_enabled = Pod::Podfile::DSL.bitcode_enabled
+            options = [
+                Podfile::DSL.bitcode_enabled,
+                Podfile::DSL.custom_build_options,
+                Podfile::DSL.custom_build_options_simulator
+            ]
             targets = []
             
             if local_manifest != nil
@@ -102,8 +107,13 @@ module Pod
                     tars
                 end.flatten
 
-                # add the dendencies
+                # add the dependencies
                 dependency_targets = targets.map {|t| t.recursive_dependent_targets }.flatten.uniq || []
+                # filter already built dependencies
+                dependency_targets = dependency_targets.reject { |t|
+                    local_manifest.version(t.name).to_s.eql? t.version.to_s
+                }
+
                 targets = (targets + dependency_targets).uniq
             else
                 targets = self.pod_targets
@@ -123,7 +133,15 @@ module Pod
 
                 output_path = sandbox.framework_folder_path_for_target_name(target.name)
                 output_path.mkpath unless output_path.exist?
-                Pod::Prebuild.build(sandbox_path, target, output_path, bitcode_enabled,  Podfile::DSL.custom_build_options,  Podfile::DSL.custom_build_options_simulator)
+
+                if Prebuild::SharedCache.has?(target, options)
+                    framework_cache_path = Prebuild::SharedCache.framework_cache_path_for(target, options)
+                    UI.puts "Using #{target.label} from cache"
+                    FileUtils.cp_r "#{framework_cache_path}/.", output_path
+                else
+                    Pod::Prebuild.build(sandbox_path, target, output_path, *options)
+                    Prebuild::SharedCache.cache(target, output_path, options)
+                end
 
                 # save the resource paths for later installing
                 if target.static_framework? and !target.resource_paths.empty?
