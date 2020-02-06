@@ -33,8 +33,17 @@ module Pod
             # - bitcode(enable_bitcode_for_prebuilt_frameworks!);
             # - custom options(set_custom_xcodebuild_options_for_prebuilt_frameworks);
             # - platform name(ios, osx);
-            def use_shared_cache!
+            # def use_shared_cache!
+            #     DSL.shared_cache_enabled = true
+            # end
+            
+
+            # Options hash depends on:
+            # - bucket: bucketName
+            def use_gcp_cache(options)
                 DSL.shared_cache_enabled = true
+                DSL.shared_gcp_cache_enabled = true
+                DSL.gcp_options = options
             end
 
             # Add custom xcodebuild option to the prebuilding action
@@ -80,6 +89,12 @@ module Pod
 
             class_attr_accessor :shared_cache_enabled
             shared_cache_enabled = false
+
+            class_attr_accessor :shared_gcp_cache_enabled
+            shared_gcp_cache_enabled = false
+
+            class_attr_accessor :gcp_options
+            gcp_options = {}
 
             class_attr_accessor :custom_build_options
             class_attr_accessor :custom_build_options_simulator
