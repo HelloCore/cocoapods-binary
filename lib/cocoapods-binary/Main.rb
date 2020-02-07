@@ -12,6 +12,12 @@ module Pod
                 DSL.prebuild_all = true
             end
 
+            # - excepts: an array of name
+            def all_binary_except(excepts)
+                DSL.prebuild_all = true
+                DSL.except_binary_list = excepts
+            end
+
             # Enable bitcode for prebuilt frameworks
             def enable_bitcode_for_prebuilt_frameworks!
                 DSL.bitcode_enabled = true
@@ -100,6 +106,9 @@ module Pod
             class_attr_accessor :custom_build_options_simulator
             self.custom_build_options = []
             self.custom_build_options_simulator = []
+
+            class_attr_accessor :except_binary_list
+            self.except_binary_list = []
         end
     end
 end
