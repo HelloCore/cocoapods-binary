@@ -133,9 +133,9 @@ module Pod
              .reject {|pod_target| sandbox.local?(pod_target.pod_name) }
              .select {|pod_target| prebuild_framework_pod_names.include?(pod_target.pod_name) }
             
-             if not Pod::Podfile::DSL.except_binary_list.nil?
-                targets = targets.reject { |pod_target| Pod::Podfile::DSL.except_binary_list.include?(pod_target.pod_name) } 
-             end
+            #  if not Pod::Podfile::DSL.except_binary_list.nil?
+            #     targets = targets.reject { |pod_target| Pod::Podfile::DSL.except_binary_list.include?(pod_target.pod_name) } 
+            #  end
              
             # build!
             Pod::UI.puts "Prebuild frameworks (total #{targets.count})"
