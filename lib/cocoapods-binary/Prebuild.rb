@@ -71,6 +71,7 @@ module Pod
             # build options
             sandbox_path = sandbox.root
             existed_framework_folder = sandbox.generate_framework_path
+            
             options = [
                 Podfile::DSL.bitcode_enabled,
                 Podfile::DSL.custom_build_options,
@@ -119,9 +120,23 @@ module Pod
                 targets = self.pod_targets
             end
 
-            targets = targets.reject {|pod_target| sandbox.local?(pod_target.pod_name) }
+             # frameworks which mark binary true, should be filtered before prebuild
 
+             prebuild_framework_pod_names = []
+             podfile.target_definition_list.each do |target_definition|
+                 next if target_definition.prebuild_framework_pod_names.empty?
+                 prebuild_framework_pod_names += target_definition.prebuild_framework_pod_names
+             end
+
+ 
+             targets = targets
+             .reject {|pod_target| sandbox.local?(pod_target.pod_name) }
+             .select {|pod_target| prebuild_framework_pod_names.include?(pod_target.pod_name) }
             
+            #  if not Pod::Podfile::DSL.except_binary_list.nil?
+            #     targets = targets.reject { |pod_target| Pod::Podfile::DSL.except_binary_list.include?(pod_target.pod_name) } 
+            #  end
+             
             # build!
             Pod::UI.puts "Prebuild frameworks (total #{targets.count})"
             Pod::Prebuild.remove_build_dir(sandbox_path)
@@ -139,7 +154,13 @@ module Pod
                     UI.puts "Using #{target.label} from cache"
                     FileUtils.cp_r "#{framework_cache_path}/.", output_path
                 else
-                    Pod::Prebuild.build(sandbox_path, target, output_path, *options)
+                    min_deployment_target = aggregate_targets
+                        .select { |t| t.pod_targets.include?(target) }
+                        .map(&:platform)
+                        .map(&:deployment_target)
+                        .max
+
+                    Pod::Prebuild.build(sandbox_path, target, output_path, min_deployment_target, *options)
                     Prebuild::SharedCache.cache(target, output_path, options)
                 end
 

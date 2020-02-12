@@ -36,6 +36,10 @@ module Pod
                     should_prebuild = options[Pod::Prebuild.keyword]
                     local = (options[:path] != nil)
                 end
+
+                if not Pod::Podfile::DSL.except_binary_list.nil?
+                    should_prebuild = !Pod::Podfile::DSL.except_binary_list.include?(name)
+                end
                 
                 if should_prebuild and (not local)
                     old_method.bind(self).(name, *args)

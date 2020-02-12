@@ -14,14 +14,14 @@ def build_for_iosish_platform(sandbox,
                               build_dir, 
                               output_path,
                               target, 
+                              deployment_target,
                               device, 
                               simulator,
                               bitcode_enabled,
                               custom_build_options = [], # Array<String>
                               custom_build_options_simulator = [] # Array<String>
                               )
-
-  deployment_target = target.platform.deployment_target.to_s
+  # deployment_target = target.platform.deployment_target.to_s
   
   target_label = target.label # name with platform if it's used in multiple platforms
   Pod::UI.puts "Prebuilding #{target_label}..."
@@ -33,8 +33,10 @@ def build_for_iosish_platform(sandbox,
   custom_build_options_simulator += ['ARCHS=x86_64', 'ONLY_ACTIVE_ARCH=NO'] if simulator == 'iphonesimulator'
 
   is_succeed, _ = xcodebuild(sandbox, target_label, device, deployment_target, other_options + custom_build_options)
+  Pod::UI.puts "Builded Device #{target_label} #{is_succeed}"
   exit 1 unless is_succeed
   is_succeed, _ = xcodebuild(sandbox, target_label, simulator, deployment_target, other_options + custom_build_options_simulator)
+  Pod::UI.puts "Builded Simulator #{target_label} #{is_succeed}"
   exit 1 unless is_succeed
 
   # paths
@@ -94,6 +96,9 @@ def build_for_iosish_platform(sandbox,
     if File.exist? simulator_dsym
       tmp_lipoed_binary_path = "#{output_path}/#{module_name}.draft"
       lipo_log = `lipo -create -output #{tmp_lipoed_binary_path} #{device_dsym}/Contents/Resources/DWARF/#{module_name} #{simulator_dsym}/Contents/Resources/DWARF/#{module_name}`
+      puts "LIPO COMMAND"
+      puts "lipo -create -output #{tmp_lipoed_binary_path} #{device_dsym}/Contents/Resources/DWARF/#{module_name} #{simulator_dsym}/Contents/Resources/DWARF/#{module_name}"
+      
       puts lipo_log unless File.exist?(tmp_lipoed_binary_path)
       FileUtils.mv tmp_lipoed_binary_path, "#{device_framework_path}.dSYM/Contents/Resources/DWARF/#{module_name}", :force => true
     end
@@ -117,6 +122,11 @@ def xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, other_optio
   log = `xcodebuild #{args.join(" ")} 2>&1`
   exit_code = $?.exitstatus  # Process::Status
   is_succeed = (exit_code == 0)
+
+  Pod::UI.puts "BUILD COMMAND"
+  Pod::UI.puts "exit_code #{exit_code}"
+  Pod::UI.puts "xcodebuild #{args.join(" ")}"
+  Pod::UI.puts log
 
   if !is_succeed
     begin
@@ -153,7 +163,7 @@ module Pod
     #         [Pathname] output_path
     #         output path for generated frameworks
     #
-    def self.build(sandbox_root_path, target, output_path, bitcode_enabled = false, custom_build_options=[], custom_build_options_simulator=[])
+    def self.build(sandbox_root_path, target, output_path, min_deployment_target, bitcode_enabled = false, custom_build_options=[], custom_build_options_simulator=[])
     
       return if target.nil?
     
@@ -163,7 +173,7 @@ module Pod
 
       # -- build the framework
       case target.platform.name
-      when :ios then build_for_iosish_platform(sandbox, build_dir, output_path, target, 'iphoneos', 'iphonesimulator', bitcode_enabled, custom_build_options, custom_build_options_simulator)
+      when :ios then build_for_iosish_platform(sandbox, build_dir, output_path, target, min_deployment_target, 'iphoneos', 'iphonesimulator', bitcode_enabled, custom_build_options, custom_build_options_simulator)
       when :osx then xcodebuild(sandbox, target.label, 'macosx', nil, custom_build_options)
       # when :tvos then build_for_iosish_platform(sandbox, build_dir, target, 'appletvos', 'appletvsimulator')
       when :watchos then build_for_iosish_platform(sandbox, build_dir, output_path, target, 'watchos', 'watchsimulator', true, custom_build_options, custom_build_options_simulator)

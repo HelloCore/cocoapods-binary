@@ -88,6 +88,10 @@ module Pod
                 explict_should_not_names = target_definition.should_not_prebuild_framework_pod_names
                 targets = targets.reject { |pod_target| explict_should_not_names.include?(pod_target.pod_name) } 
 
+                if not Pod::Podfile::DSL.except_binary_list.nil?
+                    targets = targets.reject { |pod_target| Pod::Podfile::DSL.except_binary_list.include?(pod_target.pod_name) } 
+                end
+
                 all += targets
             end
 
