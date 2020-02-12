@@ -113,7 +113,7 @@ module Pod
     end
 end
 
-Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_context|
+Pod::HooksManager.register('cocoapods-binary-gcp', :pre_install) do |installer_context|
 
     require_relative 'helper/feature_switches'
     if Pod.is_prebuild_stage
@@ -126,7 +126,7 @@ Pod::HooksManager.register('cocoapods-binary', :pre_install) do |installer_conte
     podfile.target_definition_list.each do |target_definition|
         next if target_definition.prebuild_framework_pod_names.empty?
         if not target_definition.uses_frameworks?
-            STDERR.puts "[!] Cocoapods-binary requires `use_frameworks!`".red
+            STDERR.puts "[!] Cocoapods-binary-gcp requires `use_frameworks!`".red
             exit
         end
     end

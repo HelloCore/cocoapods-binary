@@ -1,5 +1,5 @@
 platform :ios, '9.0'
-plugin 'cocoapods-binary'
+plugin 'cocoapods-binary-gcp'
 
 use_frameworks!
 all_binary!

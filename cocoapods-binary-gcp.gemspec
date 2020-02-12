@@ -1,7 +1,7 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'cocoapods-binary/gem_version.rb'
+require 'cocoapods-binary-gcp/gem_version.rb'
 
 Gem::Specification.new do |spec|
   spec.name          = 'cocoapods-binary-gcp'
