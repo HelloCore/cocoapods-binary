@@ -96,10 +96,10 @@ def build_for_iosish_platform(sandbox,
     if File.exist? simulator_dsym
       tmp_lipoed_binary_path = "#{output_path}/#{module_name}.draft"
       lipo_log = `lipo -create -output #{tmp_lipoed_binary_path} #{device_dsym}/Contents/Resources/DWARF/#{module_name} #{simulator_dsym}/Contents/Resources/DWARF/#{module_name}`
-      puts "LIPO COMMAND"
-      puts "lipo -create -output #{tmp_lipoed_binary_path} #{device_dsym}/Contents/Resources/DWARF/#{module_name} #{simulator_dsym}/Contents/Resources/DWARF/#{module_name}"
+      # puts "LIPO COMMAND"
+      # puts "lipo -create -output #{tmp_lipoed_binary_path} #{device_dsym}/Contents/Resources/DWARF/#{module_name} #{simulator_dsym}/Contents/Resources/DWARF/#{module_name}"
       
-      puts lipo_log unless File.exist?(tmp_lipoed_binary_path)
+      # puts lipo_log unless File.exist?(tmp_lipoed_binary_path)
       FileUtils.mv tmp_lipoed_binary_path, "#{device_framework_path}.dSYM/Contents/Resources/DWARF/#{module_name}", :force => true
     end
     # move
@@ -126,7 +126,7 @@ def xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, other_optio
   Pod::UI.puts "BUILD COMMAND"
   Pod::UI.puts "exit_code #{exit_code}"
   Pod::UI.puts "xcodebuild #{args.join(" ")}"
-  Pod::UI.puts log
+  # Pod::UI.puts log
 
   if !is_succeed
     begin
