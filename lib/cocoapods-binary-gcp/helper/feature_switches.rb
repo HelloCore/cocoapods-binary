@@ -27,6 +27,8 @@ module Pod
                     return
                 end
 
+                # old_method.bind(self).(name, *args)
+                
                 # patched content
                 should_prebuild = Pod::Podfile::DSL.prebuild_all
                 local = false
@@ -41,7 +43,9 @@ module Pod
                     should_prebuild = !Pod::Podfile::DSL.except_binary_list.include?(name)
                 end
                 
-                if should_prebuild and (not local)
+                if Pod::is_prebuild_stage
+                    old_method.bind(self).(name, *args)
+                elsif should_prebuild and (not local)
                     old_method.bind(self).(name, *args)
                 end
             end

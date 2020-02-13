@@ -121,17 +121,33 @@ module Pod
             end
 
              # frameworks which mark binary true, should be filtered before prebuild
+            
+             if Pod::Podfile::DSL.prebuild_all 
+                dont_prebuild_framework_pod_names = []
+                podfile.target_definition_list.each do |target_definition|
+                    next if target_definition.should_not_prebuild_framework_pod_names.empty?
+                    dont_prebuild_framework_pod_names += target_definition.should_not_prebuild_framework_pod_names
+                end
 
-             prebuild_framework_pod_names = []
-             podfile.target_definition_list.each do |target_definition|
-                 next if target_definition.prebuild_framework_pod_names.empty?
-                 prebuild_framework_pod_names += target_definition.prebuild_framework_pod_names
+                targets = targets
+                    .reject {|pod_target| sandbox.local?(pod_target.pod_name) }
+                    .reject {|pod_target| dont_prebuild_framework_pod_names.include?(pod_target.pod_name) }    
+                             
+            
+                if not Pod::Podfile::DSL.except_binary_list.nil?
+                    targets = targets.reject { |pod_target| Pod::Podfile::DSL.except_binary_list.include?(pod_target.pod_name) } 
+                end
+             else
+                prebuild_framework_pod_names = []
+                podfile.target_definition_list.each do |target_definition|
+                    next if target_definition.prebuild_framework_pod_names.empty?
+                    prebuild_framework_pod_names += target_definition.prebuild_framework_pod_names
+                end
+   
+                targets = targets
+                    .reject {|pod_target| sandbox.local?(pod_target.pod_name) }
+                    .select {|pod_target| prebuild_framework_pod_names.include?(pod_target.pod_name) }
              end
-
- 
-             targets = targets
-             .reject {|pod_target| sandbox.local?(pod_target.pod_name) }
-             .select {|pod_target| prebuild_framework_pod_names.include?(pod_target.pod_name) }
             
             #  if not Pod::Podfile::DSL.except_binary_list.nil?
             #     targets = targets.reject { |pod_target| Pod::Podfile::DSL.except_binary_list.include?(pod_target.pod_name) } 
