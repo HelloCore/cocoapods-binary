@@ -30,8 +30,15 @@ def build_for_iosish_platform(sandbox,
   # bitcode enabled
   other_options += ['BITCODE_GENERATION_MODE=bitcode'] if bitcode_enabled
   # make less arch to iphone simulator for faster build
-  custom_build_options_simulator += ['ARCHS=x86_64', 'ONLY_ACTIVE_ARCH=NO'] if simulator == 'iphonesimulator'
-
+  # custom_build_options_simulator += ['ARCHS=x86_64', 'ONLY_ACTIVE_ARCH=NO'] if simulator == 'iphonesimulator'
+  
+  # make less arch to iphone simulator for faster build if there is no options in `custom_build_options_simulator`
+  if simulator == 'iphonesimulator'
+    joined_options = custom_build_options_simulator.join(' ')
+    custom_build_options_simulator << 'ONLY_ACTIVE_ARCH=NO' unless joined_options.include?('ONLY_ACTIVE_ARCH')
+    custom_build_options_simulator << 'ARCHS=x86_64' unless joined_options.include?('ARCHS')
+  end
+  
   is_succeed, _ = xcodebuild(sandbox, target_label, device, deployment_target, other_options + custom_build_options)
   Pod::UI.puts "Builded Device #{target_label} #{is_succeed}"
   exit 1 unless is_succeed
@@ -119,6 +126,7 @@ def xcodebuild(sandbox, target, sdk='macosx', deployment_target=nil, other_optio
   platform = PLATFORMS[sdk]
   args += Fourflusher::SimControl.new.destination(:oldest, platform, deployment_target) unless platform.nil?
   args += other_options
+  args.map! { |arg| arg.include?(' ') ? "\'#{arg}\'" : arg }
   log = `xcodebuild #{args.join(" ")} 2>&1`
   exit_code = $?.exitstatus  # Process::Status
   is_succeed = (exit_code == 0)
